@@ -1,0 +1,18 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "configMap.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "configMap.labels" . | nindent 4 }}
+{{- if .Values.configMap.annotations }}
+  annotations: {{ toYaml .Values.configMap.annotations | nindent 4 }}
+{{- end }}
+{{- if .Values.configMap.data }}
+data:
+{{- range $key, $value := .Values.configMap.data }}
+  {{ $key | nindent 2 }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- end }}

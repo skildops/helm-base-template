@@ -1,0 +1,14 @@
+{{- if .Values.deployment.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "deployment.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "ingress.labels" . | nindent 4 }}
+{{- if .Values.deployment.ingress.annotations -}}
+  annotations: {{ toYaml .Values.deployment.ingress.annotations | nindent 4 }}
+{{- end }}
+spec:
+  rules: {{ toYaml .Values.deployment.ingress.rules | nindent 4 }}
+{{- end }}

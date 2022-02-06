@@ -1,0 +1,106 @@
+{{- if .Values.deployment.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "deployment.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "deployment.labels" . | nindent 4 }}
+{{- if .Values.deployment.annotations }}
+  annotations: {{ toYaml .Values.deployment.annotations | nindent 4 }}
+{{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "deployment.selectorLabels" . | nindent 6 }}
+{{- if not .Values.deployment.autoscaling.enabled }}
+  replicas: {{ .Values.deployment.replicaCount }}
+  strategy: {{ toYaml .Values.deployment.updateStrategy | nindent 4 }}
+{{- end }}
+  template:
+    metadata:
+    {{- if .Values.deployment.podAnnotations }}
+      annotations: {{ toYaml .Values.deployment.podAnnotations | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "deployment.selectorLabels" . | nindent 8 }}
+      {{- if .Values.deployment.podLabels }}
+        {{- toYaml .Values.deployment.podLabels | nindent 8 }}
+      {{- end }}
+    spec:
+    {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.global.imagePullSecrets | nindent 8 }}
+    {{- end }}
+    {{- if .Values.deployment.priorityClassName }}
+      priorityClassName: {{ .Values.deployment.priorityClassName }}
+    {{- end }}
+    {{- if .Values.deployment.serviceAccount.enabled }}
+      serviceAccountName: {{ .Values.deployment.serviceAccount.name }}
+      automountServiceAccountToken: {{ .Values.deployment.serviceAccount.automountServiceAccountToken }}
+    {{- end }}
+    {{- if .Values.deployment.podSecurityContext }}
+      securityContext: {{ toYaml .Values.deployment.podSecurityContext | nindent 8 }}
+    {{- end }}
+    {{- if .Values.deployment.volumes }}
+      volumes: {{ toYaml .Values.deployment.volumes | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: {{ template "deployment.fullname" . }}
+          {{- with .Values.deployment.image }}
+          image: "{{ .repository }}:{{ .tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+        {{- if .Values.deployment.containerSecurityContext }}
+          securityContext: {{ toYaml .Values.deployment.containerSecurityContext | nindent 12 }}
+        {{- end }}
+        {{- if .Values.deployment.volumeMounts }}
+          volumeMounts: {{ toYaml .Values.deployment.volumeMounts | nindent 12 }}
+        {{- end }}
+          env:
+            - name: ENVIRONMENT
+              value: {{ .Values.global.environment }}
+          {{- if .Values.deployment.extraEnvs }}
+            {{ toYaml .Values.deployment.extraEnvs | nindent 12 }}
+          {{- end }}
+          ports: {{ toYaml .Values.deployment.ports | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.deployment.healthCheck.path }}
+              port: {{ .Values.deployment.healthCheck.port }}
+              scheme: {{ .Values.deployment.healthCheck.scheme }}
+            initialDelaySeconds: {{ .Values.deployment.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.deployment.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.deployment.startupProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.deployment.startupProbe.successThreshold }}
+            failureThreshold: {{ .Values.deployment.startupProbe.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.deployment.healthCheck.path }}
+              port: {{ .Values.deployment.healthCheck.port }}
+              scheme: {{ .Values.deployment.healthCheck.scheme }}
+            initialDelaySeconds: {{ .Values.deployment.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.deployment.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.deployment.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.deployment.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.deployment.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.deployment.healthCheck.path }}
+              port: {{ .Values.deployment.healthCheck.port }}
+              scheme: {{ .Values.deployment.healthCheck.scheme }}
+            initialDelaySeconds: {{ .Values.deployment.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.deployment.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.deployment.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.deployment.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.deployment.readinessProbe.failureThreshold }}
+        {{- if .Values.deployment.resources }}
+          resources: {{ toYaml .Values.deployment.resources | nindent 12 }}
+        {{- end }}
+    {{- if .Values.deployment.tolerations }}
+      tolerations: {{ toYaml .Values.deployment.tolerations | nindent 8 }}
+    {{- end }}
+    {{- if .Values.deployment.affinity }}
+      affinity: {{ toYaml .Values.deployment.affinity | nindent 8 }}
+    {{- end }}
+      terminationGracePeriodSeconds: 60
+{{- end }}

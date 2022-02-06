@@ -1,0 +1,17 @@
+{{- if .Values.deployment.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "deployment.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+{{- if .Values.deployment.service.annotations }}
+  annotations: {{ toYaml .Values.deployment.service.annotations | nindent 4 }}
+{{- end }}
+spec:
+  type: {{ .Values.deployment.service.type }}
+  selector:
+    {{- include "deployment.selectorLabels" . | nindent 4 }}
+  ports: {{ toYaml .Values.deployment.service.ports | nindent 4 }}
+{{- end }}

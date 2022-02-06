@@ -1,0 +1,209 @@
+global:
+  projectName: "helm"
+  environment: "dev"
+  namespace: "default"
+  imagePullSecrets: {}
+
+  ## Labels to assign to all resources
+  labels: {}
+
+deployment:
+  enabled: true
+
+  ## Labels to assign to the pod
+  labels: {}
+
+  name: "template"
+
+  annotations: {}
+
+  selectorLabels: {}
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+
+  replicaCount: 1
+
+  ## The update strategy to apply to the deployemnt
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 0%
+      maxSurge: 50%
+    type: RollingUpdate
+
+  ## Annotations to be added to the pod
+  podAnnotations: {}
+
+  ## labels to add to the pod container metadata
+  podLabels: {}
+
+  priorityClassName: ""
+
+  serviceAccount:
+    enabled: true
+    name: "template"
+
+    ## For secrutiy reason this should be set to false
+    ## If your pod wants to interact with kube api or you are creating a
+    ## custom service account than you will have to mount the service account token manually using:
+    ## https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection
+    automountServiceAccountToken: false
+
+    ## Annotations to be added to the service
+    annotations: {}
+      # eks\\.amazonaws\\.com/role-arn: "arn:aws:iam::999999999999:role/example"
+
+  ## Security settings to use non-root user for executing all instructions with the pod
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+
+  ## Volumes to mount to the pod
+  ## Mounting a tmp dir if pod needs to perform write operation on file system since
+  ## root filesystem is by default set to read-only as a best security practise below in containerSecurityContext
+  volumes:
+    - name: tmpdir
+      emptyDir: {}
+
+  image:
+    repository: "busybox"
+    tag: "latest"
+    pullPolicy: Always
+
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+
+  ## Mounting the above created volume to the container
+  volumeMounts:
+    - mountPath: /tmp
+      name: tmpdir
+
+  ## Additional environment variables to set
+  extraEnvs: []
+  # extraEnvs:
+  #   - name: FOO
+  #     valueFrom:
+  #       secretKeyRef:
+  #         key: FOO
+  #         name: secret-resource
+
+  ## Configures the ports backend listens on
+  ports: []
+    # - name: http
+    #   containerPort: 80
+    #   protocol: http
+
+  ## Path of the health check endpoint. All requests received on the port defined by
+  ## the healthz-port parameter are forwarded internally to this path.
+  healthCheck:
+    path: "/health"
+    port: 80
+    scheme: http
+
+  ## Liveness and readiness probe values
+  ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+  startupProbe:
+    failureThreshold: 15
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+  livenessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+  tolerations: {}
+
+  affinity: {}
+
+  service:
+    enabled: true
+    type: ClusterIP
+
+    ## Labels to assign to the service
+    labels: {}
+
+    ## Annotations to be added to the service
+    annotations: {}
+
+    ports: []
+      # - name: http
+      #   port: 80
+      #   protocol: TCP
+      #   targetPort: 80
+
+  ingress:
+    enabled: true
+
+    ## Labels to assign to the ingress
+    labels: {}
+
+    ## Annotations to be added to the ingress
+    annotations: {}
+
+    rules: []
+      # - host: "example.com"
+      #   http:
+      #     paths:
+      #       - path: /*
+      #         pathType: Prefix
+      #         backend:
+      #           service:
+      #             name: example
+      #             port:
+      #               number: 80
+
+configMap:
+  enabled: true
+
+  name: "template"
+
+  ## Labels to assign to the configMap
+  labels: {}
+
+  ## Annotations to be added to the configMap
+  annotations: {}
+
+  ## config map data
+  data:
+    # env: dev
+    # version: v1
+
+secret:
+  enabled: true
+
+  name: ""
+
+  ## Labels to assign to the secret
+  labels: {}
+
+  ## Annotations to be added to the secret
+  annotations: {}
+
+  ## Secrets to create
+  data: {}
+    # apiKey: xxxxxxxxx
+    # secretKey: xxxxxxxx
